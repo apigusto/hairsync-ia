@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hairsync.IA - Agendamento Inteligente</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>HairSync.IA</h1>
+
+    <form action="/agendar" method="post">
+      <label for="nome">Nome:</label>
+      <input type="text" id="nome" name="nome" placeholder="Seu nome" required>
+
+      <label for="data">Data do agendamento:</label>
+      <input type="date" id="data" name="data" required>
+
+      <label for="hora">Hora do agendamento:</label>
+      <input type="time" id="hora" name="hora" required>
+
+      <button type="submit">Agendar</button>
+    </form>
+
+    <h2>Agendamentos:</h2>
+    <ul>
+      {% for ag in agendamentos %}
+        <li><strong>{{ ag['Nome'] }}</strong> - {{ ag['Data'] }} às {{ ag['Hora'] }}</li>
+      {% endfor %}
+    </ul>
+
+    <div class="chat">
+      <h2>Assistente Virtual</h2>
+      <label for="msg">Digite sua pergunta:</label>
+      <input type="text" id="msg" placeholder="Ex: Qual o horário de atendimento?" />
+      <button id="btn-enviar">Enviar</button>
+      <p id="resposta"></p>
+    </div>
+  </div>
+
+  <script>
+    
+    window.addEventListener('load', () => {
+      const dataInput = document.getElementById('data');
+      const horaInput = document.getElementById('hora');
+
+      const hoje = new Date();
+      const minData = new Date(hoje);
+      minData.setDate(hoje.getDate() + 2);
+      const maxData = new Date(hoje);
+      maxData.setDate(hoje.getDate() + 8);
+
+      const formatDate = d => d.toISOString().split('T')[0];
+      dataInput.min = formatDate(minData);
+      dataInput.max = formatDate(maxData);
+
+      horaInput.min = "08:00";
+      horaInput.max = "18:30";
+
+      function isDiaBloqueado(dateStr) {
+        const d = new Date(dateStr + "T00:00:00");
+        const dia = d.getDay();
+        return (dia === 0 || dia === 1);
+      }
+
+      dataInput.addEventListener('blur', () => {
+        const valor = dataInput.value;
+        if (valor !== "") {
+          const dataSelecionada = new Date(valor + "T00:00:00");
+          const dia = dataSelecionada.getDay();
+          if (dia === 0 || dia === 1) {
+            alert('Agendamento não permitido para domingo ou segunda-feira.');
+            dataInput.value = '';
+          }
+        }
+      });
+
+      document.querySelector('form').addEventListener('submit', e => {
+        const dataVal = dataInput.value;
+        const horaVal = horaInput.value;
+
+        if (!dataVal || !horaVal) {
+          alert('Preencha data e hora corretamente.');
+          e.preventDefault();
+          return;
+        }
+
+        if (isDiaBloqueado(dataVal)) {
+          alert('Agendamento não permitido para domingo ou segunda-feira.');
+          e.preventDefault();
+          return;
+        }
+
+        if (horaVal < "08:00" || horaVal > "18:30") {
+          alert('Horário permitido: 08:00 às 18:30.');
+          e.preventDefault();
+          return;
+        }
+
+        alert("Agendamento confirmado!");
+      });
+    });
+
+    
+    const respostas = {
+      "Oi": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "Olá": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "Tudo bem?": "Olá, Sou Mari! Vamos agendar seu horário?",
+      ".": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "a": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "e": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "i": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "o": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "u": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "ajuda": "Olá, Sou Mari! Vamos agendar seu horário?",
+      "horário": "Atendemos das 8h às 18h, de terça a sábado.",
+      "agendamento": "Para agendar basta responder o passo a passo.",
+      "atendimento": "Atendemos das 8h às 18h, de terça a sábado.",
+      "confirmar": "Preencha o formulário com nome, data e hora.",
+      "agendar": "Use o formulário acima para agendar.",
+      "cancelar": "Cancelamentos são feitos presencialmente.",
+      "preço": "Os preços dependem do serviço. Consulte no local.",
+      "onde fica": "Estamos na Rua Principal, 123 - Centro."
+    };
+
+    document.getElementById('btn-enviar').addEventListener('click', () => {
+      const msg = document.getElementById('msg').value.toLowerCase();
+      const respostaEl = document.getElementById('resposta');
+
+      let resposta = "Desculpe, não entendi. Pergunte sobre agendamento, horário ou localização.";
+
+      for (let chave in respostas) {
+        if (msg.includes(chave)) {
+          resposta = respostas[chave];
+          break;
+        }
+      }
+
+      respostaEl.textContent = resposta;
+    });
+  </script>
+</body>
+</html>
